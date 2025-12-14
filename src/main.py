@@ -1,11 +1,15 @@
 import flet as ft
-from utilities import filterSessionsData 
+from utilities import filterSessionsData,filterSessionsByCircuit,obtainRaceData
 import datetime
 def main(page: ft.Page):
+    results_columns = ft.Column(scroll=ft.ScrollMode.ADAPTIVE, expand=True)
+    raceData=ft.Column(expand=True,scroll=ft.ScrollMode.ADAPTIVE)
     page.title="Paginita F1"
     fechaInicio=""
     fechaFinal=""
     eventos ={"practicas":[{}],"qualys":[{}],"carreras":[{}]}
+    dataRaceObj=None
+    page.scroll=None
     def handle_change(e):
         nonlocal fechaFinal,fechaInicio
         match e.control.data:
@@ -24,84 +28,74 @@ def main(page: ft.Page):
         eventos =filterSessionsData(fechaInicio,fechaFinal)
         print(eventos)
         updateEventView()
-    #Añadiduras a la página
-    text =ft.Text(value="Bienvenido a la app F1",color="white")
-    page.controls.append(text)
+
     def updateEventView():
         nonlocal eventos
-        page.add(
-            ft.Container(
-                content= ft.Row(
-                    [
-                        ft.Container(
+        results_columns.controls.clear()
+        results_columns.controls.append(
+                ft.Text("Resultados de la búsqueda",size=25,color=ft.Colors.CYAN)
+            )
+        results_columns.controls.extend(
+            [
+                ft.Button(
+                    f"Carrera de:{carrera["circuito"]}",
+                    on_click=updateRaceData,
+                    data=carrera["session_nro"]
+                )
+                for carrera in eventos["carreras"]
+            ]
+
+        )
+        page.update()
+    def updateRaceData(e):
+        nonlocal dataRaceObj
+        raceId=e.control.data
+        print(raceId)
+        raceData.controls.clear()
+        dataRaceObj=obtainRaceData(raceId)
+        raceData.controls.extend(
+
+                    ft.Card(
                             content=ft.Column(
-                                controls=[
-                                    ft.Text("Practicas",weight=ft.FontWeight.BOLD),
-                                    *(
-                                    ft.Card(
-                                        content=ft.Container(
-                                            padding=10,
-                                            content=ft.Column(
-                                                [
-                                                    ft.Text(f"{practica["session_name"]}  {practica["ubicacion"]}  {practica["pais"]}")
-                                                ]
-                                            )
-                                        )
+                                [
+                                    ft.Text(f"Corredor N°:{driver["numeroPiloto"]}"),
+                                    ft.Image(
+                                        src=driver["foto"]  
+                                    ),
+                                    ft.Row(
+                                        [
+                                            ft.Text(f"Nombre piloto: {driver["nombre"]}"),
+                                            ft.Text(f"Acrónimo: {driver["acronimo"]}")
+                                        ]
                                     )
-                                    for practica in eventos["practicas"]
-                                    
-                                )
-                                ]
-                            )
-                        ),
-                        ft.Container(
-                            content=ft.Column(
-                                controls=[
-                                    ft.Text("Qualys",weight=ft.FontWeight.BOLD),
-                                    *(
-                                    ft.Card(
-                                        content=ft.Container(
-                                            padding=10,
-                                            content=ft.Column(
-                                                [
-                                                    ft.Text(f"{practica["session_name"]} {practica["ubicacion"]}  {practica["pais"]}")
-                                                ]
-                                            )
-                                        )
-                                    )
-                                    for practica in eventos["qualys"]
-                                )
-                                ]
-                            )
-                        ),
-                        ft.Container(
-                            content=ft.Column(
-                                controls=[
-                                    ft.Text("Carreras",weight=ft.FontWeight.BOLD),
-                                    *(
-                                    ft.Card(
-                                        content=ft.Container(
-                                            padding=10,
-                                            content=ft.Column(
-                                                [
-                                                    ft.Text(f"{practica["session_name"]}  {practica["ubicacion"]}  {practica["pais"]}")
-                                                ]
-                                            )
-                                        )
-                                    )
-                                    for practica in eventos["carreras"]
-                                )
                                 ]
                             )
                         )
-                    ]
-                )
-            )
-
+                    
+                    for driver in dataRaceObj["pilotos"]
+            # ft.Container(
+            #     content=[
+            #         ft.Text(f"Ubicacion: {dataRaceObj['general']["location"]} Código de país: {dataRaceObj["general"]["country_code"]}"),
+            #         ft.Text(f"Circuito: {dataRaceObj["general"]["circuit_short_name"]}")
+            #     ]
+            # )
         )
-
+        page.update()
+    #Añadiduras a la página
+    text =ft.Text(value="Bienvenido a la app F1",color="white",size=ft.FontWeight.BOLD)
+    page.controls.append(text)
     page.add(
+        ft.Text(
+            "Buscar carreras por fechas",
+            size=40,
+
+        ),
         ft.Row(
+            expand=True,
+            vertical_alignment=ft.CrossAxisAlignment.START, 
+            controls=[
+            
+        ft.Column(
             [
             ft.Row(
                 [ft.Container(
@@ -132,14 +126,19 @@ def main(page: ft.Page):
                         )
                     )
                 )
-                )
-                ]
                 ),
             ft.Button(
                     "Buscar Eventos",
                     on_click=searchEvents
                 )
-    ]
+                ]
+                ),
+
+            results_columns
+        ]
+            ),
+            raceData
+            ]
             )
     )
 

@@ -4,6 +4,8 @@ import datetime
 def main(page: ft.Page):
     results_columns = ft.Column(scroll=ft.ScrollMode.ADAPTIVE, expand=True)
     raceData=ft.Column(expand=True,scroll=ft.ScrollMode.ADAPTIVE)
+    pilotosRace=ft.Row(expand=True,scroll=ft.ScrollMode.ADAPTIVE)
+    tablaPos=ft.Row(expand=True,scroll=ft.ScrollMode.ADAPTIVE)
     page.title="Paginita F1"
     fechaInicio=""
     fechaFinal=""
@@ -53,11 +55,39 @@ def main(page: ft.Page):
         print(raceId)
         raceData.controls.clear()
         dataRaceObj=obtainRaceData(raceId)
-        raceData.controls.extend(
+        raceData.controls.extend([
+            ft.Column([
+            ft.Text("Datos de la carrera", size=25,color=ft.Colors.CYAN),
+            ft.Row([
+                ft.Card(
 
+                content=ft.Column(
+                    [
+                        ft.Button(f"Nombre del circuito: {dataRaceObj["general"]["circuit_short_name"]}",
+                                  on_click=""
+                                  ),
+                        ft.Text(f"Ubicacion: {dataRaceObj["general"]["location"]}    {dataRaceObj["general"]["country_code"]}", size=18),
+                        ft.Text(f"",size=18)
+
+                    ]
+                )
+            )
+            ]
+            )
+            ])
+            
+            ]
+        )
+        pilotosRace.controls.extend(
+                    
                     ft.Card(
-                            content=ft.Column(
-                                [
+                            
+                            color=f"#{driver["color_equipo"]}",
+                            content=ft.Container(
+                                bgcolor=f"#{driver["color_equipo"]}",
+                                content=ft.Column(
+                                    
+                                    [
                                     ft.Text(f"Corredor N°:{driver["numeroPiloto"]}"),
                                     ft.Image(
                                         src=driver["foto"]  
@@ -65,20 +95,47 @@ def main(page: ft.Page):
                                     ft.Row(
                                         [
                                             ft.Text(f"Nombre piloto: {driver["nombre"]}"),
-                                            ft.Text(f"Acrónimo: {driver["acronimo"]}")
+                                            ft.Text(f"Acrónimo: {driver["acronimo"]}"),
+                                            
                                         ]
-                                    )
-                                ]
+                                    ),
+                                    ft.Text(f"Equipo: {driver["equipo"]}",size=20)
+                                ])
                             )
                         )
                     
                     for driver in dataRaceObj["pilotos"]
-            # ft.Container(
-            #     content=[
-            #         ft.Text(f"Ubicacion: {dataRaceObj['general']["location"]} Código de país: {dataRaceObj["general"]["country_code"]}"),
-            #         ft.Text(f"Circuito: {dataRaceObj["general"]["circuit_short_name"]}")
-            #     ]
-            # )
+        )
+        tablaPos.controls.extend(
+            ft.Card(
+                shadow_color=f"#{driver["color_equipo"]}",
+                content=ft.Column(
+                    [
+                        ft.Text(f"Posición: {driver["position"]}"),
+                        ft.Text(f"{driver["driver_number"]} {driver["nombre"]} "),
+                        ft.Text(f"Equipo: {driver["equipo"]}"),
+                        ft.Text(f"Puntos: {driver["points"]}")
+
+                    ]
+                )
+            )
+            for driver in dataRaceObj["resultados"]
+        )
+        raceData.controls.append(
+            ft.Column(
+            [
+                ft.Text("Pilotos que corrieron en la carrera"),
+                pilotosRace
+            ]
+            )
+        )
+        raceData.controls.append(
+            ft.Column(
+            [
+                ft.Text("Resultados de la carrera"),
+                tablaPos
+            ]
+            )
         )
         page.update()
     #Añadiduras a la página
